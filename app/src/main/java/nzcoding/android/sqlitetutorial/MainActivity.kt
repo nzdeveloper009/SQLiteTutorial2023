@@ -13,7 +13,12 @@ import android.widget.SearchView.OnQueryTextListener
 import android.widget.SimpleCursorAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import nzcoding.android.sqlitetutorial.data.db.MyHelper
 import nzcoding.android.sqlitetutorial.databinding.ActivityMainBinding
+import nzcoding.android.sqlitetutorial.utils.ConstName
+import nzcoding.android.sqlitetutorial.utils.ConstName.COL_MEANING
+import nzcoding.android.sqlitetutorial.utils.ConstName.COL_NAME
+import nzcoding.android.sqlitetutorial.utils.ConstName.TB_NAME
 
 class MainActivity : AppCompatActivity() {
 	lateinit var binding: ActivityMainBinding
@@ -27,7 +32,7 @@ class MainActivity : AppCompatActivity() {
 
 		var helper = MyHelper(applicationContext)
 		db = helper.readableDatabase
-		cursor = db.rawQuery("SELECT * FROM ACTABLE ORDER BY NAME", null)
+		cursor = db.rawQuery("SELECT * FROM $TB_NAME ORDER BY $COL_NAME", null)
 		var cv = ContentValues()
 
 		binding.firstBtn.setOnClickListener {
@@ -68,9 +73,9 @@ class MainActivity : AppCompatActivity() {
 				Toast.makeText(this@MainActivity, "No Data Found", Toast.LENGTH_LONG).show()
 		}
 		binding.insertBtn.setOnClickListener {
-			cv.put("NAME", binding.nameEt.text.toString())
-			cv.put("MEANING", binding.descriptionEt.text.toString())
-			db.insert("ACTABLE", null, cv)
+			cv.put(COL_NAME, binding.nameEt.text.toString())
+			cv.put(COL_MEANING, binding.descriptionEt.text.toString())
+			db.insert(TB_NAME, null, cv)
 			cursor.requery()
 
 			var ad = AlertDialog.Builder(this)
@@ -88,9 +93,9 @@ class MainActivity : AppCompatActivity() {
 		}
 
 		binding.updateBtn.setOnClickListener {
-			cv.put("NAME", binding.nameEt.text.toString())
-			cv.put("MEANING", binding.descriptionEt.text.toString())
-			db.update("ACTABLE", cv, "_id = ?", arrayOf(cursor.getString(0)))
+			cv.put(COL_NAME, binding.nameEt.text.toString())
+			cv.put(COL_MEANING, binding.descriptionEt.text.toString())
+			db.update(TB_NAME, cv, "_id = ?", arrayOf(cursor.getString(0)))
 			cursor.requery()
 
 			var ad = AlertDialog.Builder(this)
@@ -109,7 +114,7 @@ class MainActivity : AppCompatActivity() {
 		}
 
 		binding.deleteBtn.setOnClickListener {
-			db.delete("ACTABLE", "_id = ?", arrayOf(cursor.getString(0)))
+			db.delete(TB_NAME, "_id = ?", arrayOf(cursor.getString(0)))
 			cursor.requery()
 
 			var ad = AlertDialog.Builder(this)
@@ -133,7 +138,7 @@ class MainActivity : AppCompatActivity() {
 
 		adapter = SimpleCursorAdapter(
 			applicationContext, android.R.layout.simple_expandable_list_item_2, cursor,
-			arrayOf("NAME", "MEANING"),
+			arrayOf(COL_NAME, COL_MEANING),
 			intArrayOf(android.R.id.text1, android.R.id.text2), 0
 		)
 
@@ -155,7 +160,7 @@ class MainActivity : AppCompatActivity() {
 
 			override fun onQueryTextChange(newText: String?): Boolean {
 				cursor = db.rawQuery(
-					"SELECT * FROM ACTABLE WHERE NAME LIKE '%${newText}%' or MEANING LIKE '%${newText}%'",
+					"SELECT * FROM $TB_NAME WHERE $COL_NAME LIKE '%${newText}% $COL_MEANING LIKE '%${newText}%'",
 					null
 				)
 				adapter.changeCursor(cursor)
@@ -186,7 +191,7 @@ class MainActivity : AppCompatActivity() {
 
 	override fun onContextItemSelected(item: MenuItem): Boolean {
 		if (item.itemId == 1) {
-			db.delete("ACTABLE", "_id = ?", arrayOf(cursor.getString(0)))
+			db.delete(TB_NAME, "_id = ?", arrayOf(cursor.getString(0)))
 			cursor.requery()
 			binding.searchView.queryHint = "Search Among ${cursor.count} Record"
 			adapter.notifyDataSetChanged()
